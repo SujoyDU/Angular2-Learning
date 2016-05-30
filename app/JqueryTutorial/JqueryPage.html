@@ -7,6 +7,22 @@
   <title>Hello Jquery!! </title>
   <body>
     <h1> My first jquery page!!</h1>
+      <script>
+
+        window.onload = function(){alert("Window loaded");}
+
+        $(document).ready(function(d){
+          alert("Dom loaded");
+          $('#myContent').html("Hello Jquery!!");
+        })
+
+      </script>
+
+    <div id = "myContent">
+      Create my jquery element..
+    </div>
+
+
   </body>
 
 
