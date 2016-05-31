@@ -1,0 +1,38 @@
+<html>
+  <meta charset="utf-8" />
+
+  <head>
+    <script type="text/javascript" src="https://rawgithub.com/NickQiZhu/dc.js/master/web/js/crossfilter.js"></script>
+    <script type = "text/javascript" src = "dataManipulation.js"></script>
+    <script type = "text/javascript" src = "jquery.js"></script>
+    <script  type = "text/javascript" src = "printData.js"></script>
+  </head>
+  <title>Hello Jquery!! </title>
+
+  <body>
+    <h1> My first jquery page!!</h1>
+
+
+      <script>
+        var ndx = crossfilter(data);
+        var totalDim = ndx.dimension(function(d) { return d.type; });
+        // var typeDim = totalDim.filter("visa");
+        // print_filter("typeDim");
+
+        var total = totalDim.group().reduceSum(function(d) {return d.total;});
+        // var total = totalDim.groupAll().reduceSum(function(d) {return d.total;}).value();
+        print_filter("total");
+
+
+        var cash_total = ndx.groupAll().reduceSum(function(d) {return d.total;}).value();
+        console.log("cash_total="+cash_total);
+
+
+
+
+      </script>
+
+  </body>
+
+
+</html>
