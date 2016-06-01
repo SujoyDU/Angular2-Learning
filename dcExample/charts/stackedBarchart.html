@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>dc.js - Stacked bar chart</title>
+
+    <meta charset="UTF-8">
+
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="http://jun9.github.io/dc.js/js/crossfilter.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/dc/1.7.5/dc.min.js"></script>
+
+
+
+    <link href="http://jun9.github.io/dc.js/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="http://jun9.github.io/dc.js/css/dc.css"/>
+
+    <link href='http://jun9.github.io/dc.js/highlighter/shCore.css' rel='stylesheet' type='text/css'/>
+    <link href='http://jun9.github.io/dc.js/highlighter/shThemeDefault.css' rel='stylesheet' type='text/css'/>
+    <style>
+    #chart g.stack._0  > rect.bar {
+  stroke: none;
+  fill: red;
+}
+
+#chart g.stack._1 > rect.bar {
+  stroke: none;
+  fill: yellow;
+}
+
+#chart g.stack._2 > rect.bar {
+  stroke: none;
+  fill: green;
+}
+
+#chart g.dc-legend-item:nth-child(1) > rect:nth-child(1) {
+  stroke: none;
+  fill: red;
+}
+
+#chart g.dc-legend-item:nth-child(2) > rect:nth-child(1) {
+  stroke: none;
+  fill: yellow;
+}
+
+#chart g.dc-legend-item:nth-child(3) > rect:nth-child(1) {
+  stroke: none;
+  fill: green;
+}
+
+
+    </style>
+
+
+</head>
+<body>
+
+<h1> Hello stacked chart</h1>
+<div id="chart"></div>
+
+
+  <div id="bar-chart" class="chart">
+      <span>Stacked Bar Chart</span>
+      <a class="reset" href="javascript:chart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+      <br/><span class="reset" style="display: none;">Current filter: <span class="filter"></span></span>
+      <div class="clear"></div>
+  </div>
+
+  <script type="text/javascript">
+      d3.csv("data.csv", function(csv){
+          var data = crossfilter(csv);
+
+          var months = data.dimension(function(d){return +d.month;});
+          var fooMonthlySum = months.group().reduceSum(function(d){return d.product=="foo"?1:0;});
+          var barMonthlySum = months.group().reduceSum(function(d){return d.product=="bar"?1:0;});
+
+          var chart = dc.barChart("#bar-chart")
+              .width(990)
+              .height(350)
+              .dimension(months)
+              .x(d3.scale.linear().domain([0, 5]))
+              .group(fooMonthlySum)
+              .stack(barMonthlySum);
+
+          dc.renderAll();
+      });
+  </script>
+
+
+
+<script>
+var data = [
+       {"date": "2014/02/09", "apples": 10, "kiwis": 10, "lemons": 10},
+       {"date": "2014/02/10", "apples": 2, "kiwis": 10, "lemons": 10},
+       {"date": "2014/02/11", "apples": 10, "kiwis": 2, "lemons": 10},
+       {"date": "2014/02/12", "apples": 10, "kiwis": 10, "lemons": 2},
+       {"date": "2014/02/13", "apples": 2, "kiwis": 2, "lemons": 10},
+       {"date": "2014/02/14", "apples": 2, "kiwis": 10, "lemons": 2},
+       {"date": "2014/02/15", "apples": 10, "kiwis": 2, "lemons": 2}
+   ];
+
+   dateFormat = d3.time.format("%Y/%m/%d");
+   data.forEach(function (e) {
+       e.dd = dateFormat.parse(e.date);
+   });
+
+   var cssChart = dc.barChart("#chart");
+   var xf = crossfilter(data);
+
+   var dateDim = xf.dimension(function (d) {
+       return d.dd;
+   });
+
+   var eventsByDate = dateDim.group().reduce(
+           function (p, v) {
+               p.apples += v.apples;
+               p.kiwis += v.kiwis;
+               p.lemons += v.lemons;
+               return p;
+           },
+           function (p, v) {
+               p.apples -= v.apples;
+               p.kiwis -= v.kiwis;
+               p.lemons -= v.lemons;
+               return p;
+           },
+           function () {
+               return {
+                   apples: 0,
+                   kiwis: 0,
+                   lemons: 0
+               };
+           }
+   );
+
+
+   var minDate = dateDim.bottom(1)[0].dd;
+   var maxDate = dateDim.top(1)[0].dd;
+
+   /* when any bar is clicked, recolor the chart */
+   var colorRenderlet = function (_chart) {
+       _chart.selectAll("rect.bar")
+               .on("click", function (d) {
+                   function setAttr(selection, keyName) {
+                       selection.style("fill", function (d) {
+                           if (d[keyName] == "Apples") return "#63D3FF";
+                           else if (d[keyName] == "Kiwis") return "#FF548F";
+                           else if (d[keyName] == "Lemons") return "#9061C2";
+                       });
+                   };
+                   setAttr(_chart.selectAll("g.stack").selectAll("rect.bar"), "layer")
+                   setAttr(_chart.selectAll("g.dc-legend-item").selectAll("rect"), "name")
+               });
+   };
+
+   cssChart
+           .margins({top: 50, right: 20, left: 50, bottom: 50})
+           .width(600)
+           .height(400)
+           .gap(50)
+           .dimension(dateDim)
+           .group(eventsByDate, "Apples")
+           .valueAccessor(function (d) {
+               return d.value.apples;
+           })
+           .stack(eventsByDate, "Kiwis", function (d) {
+               return d.value.kiwis;
+           })
+           .stack(eventsByDate, "Lemons", function (d) {
+               return d.value.lemons;
+           })
+           .x(d3.time.scale().domain([minDate, maxDate]))
+           .xUnits(d3.time.days)
+           .centerBar(true)
+           .elasticY(true)
+           .brushOn(false)
+           .renderlet(colorRenderlet)
+           .legend(dc.legend().x(100).y(0).itemHeight(13).gap(5))
+           .render();
+
+
+</script>
+
+
+</body>
+
+</html>
