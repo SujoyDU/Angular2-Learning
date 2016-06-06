@@ -7,33 +7,96 @@
 </head>
 <body>
 
-<div id="test1"></div>
+<div id="pieChart"></div>
+<div id="rowChart"></div>
 
 <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://rawgithub.com/NickQiZhu/dc.js/master/web/js/crossfilter.js"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/dc/1.7.5/dc.min.js"></script>
 <script type="text/javascript">
-var chart = dc.pieChart("#test1");
-d3.csv("morley.csv", function(error, experiments) {
-  var ndx           = crossfilter(experiments),
-      runDimension  = ndx.dimension(function(d) {return "run-"+d.Run;})
-      speedSumGroup = runDimension.group().reduceSum(function(d) {return d.Speed * d.Run;});
-  chart
-    .width(768)
-    .height(480)
-    .slicesCap(4)
-    .innerRadius(100)
-    .dimension(runDimension)
-    .group(speedSumGroup)
-    .legend(dc.legend())
-    // workaround for #703: not enough data is accessible through .label() to display percentages
-    .on('pretransition', function(chart) {
-        chart.selectAll('text.pie-slice').text(function(d) {
-            return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
-        })
+var data = [{
+    "city": "New York",
+        "neighborhood": "N/A",
+        "hits": 200
+}, {
+    "city": "New York",
+        "neighborhood": "Brooklyn",
+        "hits": 225
+}, {
+    "city": "New York",
+        "neighborhood": "Queens",
+        "hits": 1
+}, {
+    "city": "San Francisco",
+        "neighborhood": "Chinatown",
+        "hits": 268
+}, {
+    "city": "San Francisco",
+        "neighborhood": "Downtown",
+        "hits": 22
+}, {
+    "city": "Seattle",
+        "neighborhood": "N/A",
+        "hits": 2
+}, {
+    "city": "Seattle",
+        "neighborhood": "Freemont",
+        "hits": 25
+}];
+var pieChart = dc.pieChart("#pieChart"),
+    rowChart = dc.rowChart("#rowChart");
+var ndx = crossfilter(data),
+    cityDimension = ndx.dimension(function (d) {
+        return d.city;
+    }),
+    cityGroup = cityDimension.group().reduceSum(function (d) {
+        return d.hits;
+    }),
+    neighborhoodDimension = ndx.dimension(function (d) {
+        return d.neighborhood;
+    }),
+    neighborhoodGroup = neighborhoodDimension.group().reduceSum(function (d) {
+        return d.hits;
     });
-  chart.render();
-});
+
+pieChart.width(200)
+    .height(200)
+    .slicesCap(5)
+    .dimension(cityDimension)
+    .group(cityGroup);
+pieChart.filter = function() {};
+
+rowChart.width(500)
+    .height(500)
+    .dimension(neighborhoodDimension)
+    .group(neighborhoodGroup);
+
+dc.renderAll();
+
+
+
+
+// var chart = dc.pieChart("#test1");
+// d3.csv("morley.csv", function(error, experiments) {
+//   var ndx           = crossfilter(experiments),
+//       runDimension  = ndx.dimension(function(d) {return "run-"+d.Run;})
+//       speedSumGroup = runDimension.group().reduceSum(function(d) {return d.Speed * d.Run;});
+//   chart
+//     .width(768)
+//     .height(480)
+//     .slicesCap(4)
+//     .innerRadius(100)
+//     .dimension(runDimension)
+//     .group(speedSumGroup)
+//     .legend(dc.legend())
+//     // workaround for #703: not enough data is accessible through .label() to display percentages
+//     .on('pretransition', function(chart) {
+//         chart.selectAll('text.pie-slice').text(function(d) {
+//             return d.data.key + ' ' + dc.utils.printSingleValue((d.endAngle - d.startAngle) / (2*Math.PI) * 100) + '%';
+//         })
+//     });
+//   chart.render();
+// });
 </script>
 
 </body>
